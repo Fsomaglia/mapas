@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mapa de Departamentos de Santa Fe</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+    .departamento {
+      fill: #d3d3d3;
+      stroke: #333;
+      stroke-width: 0.5px;
+    }
+    .departamento:hover {
+      fill: steelblue;
+    }
+    .tooltip {
+      position: absolute;
+      background: white;
+      border: 1px solid #aaa;
+      padding: 5px;
+      pointer-events: none;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Departamentos de Santa Fe</h2>
+  <div id="mapa"></div>
+  <script>
+    const width = 600, height = 800;
+
+    const svg = d3.select("#mapa")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+    const tooltip = d3.select("body")
+      .append("div")
+      .attr("class", "tooltip")
+      .style("opacity", 0);
+
+    const projection = d3.geoMercator();
+    const path = d3.geoPath().projection(projection);
+
+    d3.json("departamentos.geojson").then(function(geojson) {
+      // Ajustar el mapa a la dimensión del SVG
+      projection.fitSize([width, height], geojson);
+
+      svg.selectAll("path")
+        .data(geojson.features)
+        .enter()
+        .append("path")
+        .attr("class", "departamento")
+        .attr("d", path)
+        .on("mouseover", function (event, d) {
+          d3.select(this).attr("fill", "orange");
+          tooltip.transition().duration(200).style("opacity", .9);
+          tooltip.html(`<strong>${d.properties.NOMBRE}</strong><br>Sup: ${d.properties.SUP_KM2} km²`)
+            .style("left", (event.pageX + 5) + "px")
+            .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", function () {
+          d3.select(this).attr("fill", null);
+          tooltip.transition().duration(500).style("opacity", 0);
+        });
+    });
+  </script>
+</body>
+</html>
